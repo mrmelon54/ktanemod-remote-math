@@ -11,13 +11,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 615501dbe4f3fe94fbf4b564abb10237, type: 3}
   m_Name: ModConfig
   m_EditorClassIdentifier: 
-  id: planets
-  title: Planets
+  id: remotemath
+  title: remotemath
   author: MrMelon
-  description: "Planets 3.0\nWhy do people do this... The Milky Way shouldn't be on
-    a bomb!\r\n\r\nModule ID: planets\r\n\r\nCreated by: MrMelon\r\n\nCredits to KingSlendy
-    for TP support\nCredits to Samfun123 for shrinking the file size from 35MB to
-    7MB\n\r\nManual available here:\r\nhttps://ktane.timwi.de/HTML/Planets.html"
-  version: 3.0
+  description: "Remote Math 1.0\nYou're telling me bombs now connect to the internet?\n\r\nModule
+    ID: remotemath\n\r\nCreated by: MrMelon\r\n\r\nManual available here:\r\nhttps://ktane.timwi.de/HTML/Remote%20Math.html"
+  version: 1.0
   outputFolder: build
-  previewImage: {fileID: 2800000, guid: b529b222526bafd42a5f2fe39d8d8a66, type: 3}
+  previewImage: {fileID: 2800000, guid: 262b07e19aa88ab46a76c80ef239066d, type: 3}

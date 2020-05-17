@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cf2299c8864afe4ab42466f546ae20d, type: 3}
   m_Name: WorkshopItem
   m_EditorClassIdentifier: 
-  WorkshopPublishedFileID: 1678785096
-  Title: Planets
+  WorkshopPublishedFileID: 0
+  Title: Remote Math
   Tags:
   - Regular Module
