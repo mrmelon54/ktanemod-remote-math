@@ -33,6 +33,7 @@ public class RemoteMathWSAPI : MonoBehaviour {
         private string PuzzleCodePrefix = "PuzzleCode::";
         private string PuzzleLogPrefix = "PuzzleLog::";
         private double lastPong=0;
+        private bool reconnectMode = false;
 
         public event EmptyEventHandler PuzzleError;
         public event EmptyEventHandler PuzzleComplete;
@@ -127,7 +128,13 @@ public class RemoteMathWSAPI : MonoBehaviour {
         private void onOpen(object sender, object e)
         {
             Debug.Log("[RemoteMathWSAPI] Connected to server");
-            OnConnected(new EventArgs());
+            if(reconnectMode)
+            {
+                OnReconnectMode(new EventArgs());
+            } else
+            {
+                OnConnected(new EventArgs());
+            }
         }
 
         private void onClose(object sender, CloseEventArgs e)
@@ -140,6 +147,10 @@ public class RemoteMathWSAPI : MonoBehaviour {
                 ws.SslConfiguration.EnabledSslProtocols = sslProtocolHack;
                 ws.Connect();
                 return;
+            }
+            if(e.Code==1006)
+            {
+                Debug.Log("[RemoteMathWSAPI] This error should never occur");
             }
             Debug.Log("[RemoteMathWSAPI] Disconnected from server");
             Debug.Log(e.Code);
@@ -224,6 +235,12 @@ public class RemoteMathWSAPI : MonoBehaviour {
         protected virtual void OnConnected(EventArgs e)
         {
             Connected.Invoke(this, e);
+        }
+
+        public event EventHandler Reconnected;
+        protected virtual void OnReconnectMode(EventArgs e)
+        {
+            Reconnected.Invoke(this, e);
         }
 
         public event EventHandler Disconnected;

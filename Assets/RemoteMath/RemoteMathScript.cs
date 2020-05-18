@@ -16,8 +16,11 @@ public class RemoteMathScript : MonoBehaviour
     public GameObject Fruit1;
     public GameObject Fruit2;
     public Material[] FruitMats;
+    public Light[] Lights;
     public string[] FruitNames;
     private RemoteMathWSAPI.Handler RemoteMathApi;
+    private string SecretCode = "";
+    private string CurrentLed;
 
     bool moduleSolved = false;
     bool allowedToSolve = false;
@@ -30,13 +33,16 @@ public class RemoteMathScript : MonoBehaviour
     {
         moduleId = moduleIdCounter++;
 
+        float scalar = transform.lossyScale.x;
+        for (var i = 0; i < Lights.Length; i++)
+            Lights[i].range *= scalar;
+
         SetSecretCode("");
 
         MainButton.OnInteract += delegate ()
         {
             if (allowedToSolve && !moduleSolved)
             {
-                SetLED("Off");
                 moduleSolved = true;
                 HandlePass();
             }
@@ -63,6 +69,7 @@ public class RemoteMathScript : MonoBehaviour
         RemoteMathApi.PuzzleError += ReceivedPuzzleError;
         RemoteMathApi.PuzzleLog += ReceivedPuzzleLog;
         RemoteMathApi.Connected += WSConnected;
+        RemoteMathApi.Reconnected += WSReconnected;
         RemoteMathApi.Disconnected += WSDisconnected;
         RemoteMathApi.Start();
         SetLED("Yellow");
@@ -117,6 +124,7 @@ public class RemoteMathScript : MonoBehaviour
         Debug.LogFormat("[Remote Math #{0}] Puzzle Code: {1}", moduleId, e.Code);
         UnityMainThreadDispatcher.Instance().Enqueue(SendPuzzleFruit());
         UnityMainThreadDispatcher.Instance().Enqueue(SendBombDetails());
+        SecretCode = e.Code;
         SetSecretCode(e.Code);
     }
 
@@ -128,7 +136,7 @@ public class RemoteMathScript : MonoBehaviour
     void ReceivedPuzzleComplete()
     {
         Debug.LogFormat("[Remote Math #{0}] Puzzle Completed", moduleId);
-        SetSecretCode("DONE");
+        SetSecretCode("DONE", true);
         SetLED("Orange");
         RemoteMathApi.Stop();
         TriggerModuleSolve();
@@ -137,7 +145,6 @@ public class RemoteMathScript : MonoBehaviour
     void ReceivedPuzzleStrike()
     {
         Debug.LogFormat("[Remote Math #{0}] Puzzle Strike", moduleId);
-        UnityMainThreadDispatcher.Instance().Enqueue(StartStrikeLEDAnimation());
         HandleStrike();
     }
 
@@ -154,6 +161,14 @@ public class RemoteMathScript : MonoBehaviour
     {
         RemoteMathApi.Login();
         Debug.LogFormat("[Remote Math #{0}] WebSocket Connected", moduleId);
+        SetLED("White");
+        isConnected = true;
+    }
+
+    void WSReconnected(object sender, EventArgs e)
+    {
+        RemoteMathApi.Send("timothy::" + SecretCode);
+        Debug.LogFormat("[Remote Math #{0}] WebSocket Reconnected", moduleId);
         SetLED("White");
         isConnected = true;
     }
@@ -176,19 +191,6 @@ public class RemoteMathScript : MonoBehaviour
         yield return null;
     }
 
-    IEnumerator StartStrikeLEDAnimation()
-    {
-        StartCoroutine(StrikeLEDAnimation());
-        yield return null;
-    }
-
-    IEnumerator StrikeLEDAnimation()
-    {
-        SetLED("Off");
-        yield return new WaitForSeconds(1);
-        SetLED("White");
-    }
-
     void SetLED(string LED)
     {
         UnityMainThreadDispatcher.Instance().Enqueue(ShowLED(LED));
@@ -196,12 +198,17 @@ public class RemoteMathScript : MonoBehaviour
 
     void SetSecretCode(string code)
     {
-        UnityMainThreadDispatcher.Instance().Enqueue(ShowSecretCode(code));
+        UnityMainThreadDispatcher.Instance().Enqueue(ShowSecretCode(code, false));
     }
 
-    IEnumerator ShowSecretCode(string code)
+    void SetSecretCode(string code, bool dontDoTheLineBreakBecauseItDefinitelyIsntNeededAtAll)
     {
-        SecretCodeText.GetComponent<TextMesh>().text = code;
+        UnityMainThreadDispatcher.Instance().Enqueue(ShowSecretCode(code, true));
+    }
+
+    IEnumerator ShowSecretCode(string code, bool dontDoTheLineBreakBecauseItDefinitelyIsntNeededAtAll)
+    {
+        SecretCodeText.GetComponent<TextMesh>().text = (dontDoTheLineBreakBecauseItDefinitelyIsntNeededAtAll || code.Length < 4) ? code : (code.Substring(0, 3) + "\n" + code.Substring(3));
         yield return null;
     }
 
@@ -219,15 +226,13 @@ public class RemoteMathScript : MonoBehaviour
 
     IEnumerator ShowLED(string LED)
     {
+        CurrentLed = LED;
         Transform transformfordafakestatuslitboi = fakeStatusLitBoi.transform;
         for (int i = 0; i < transformfordafakestatuslitboi.childCount; i++)
         {
             transformfordafakestatuslitboi.GetChild(i).gameObject.SetActive(false);
         }
-        if (LED != "Off")
-        {
-            transformfordafakestatuslitboi.Find(LED).gameObject.SetActive(true);
-        }
+        transformfordafakestatuslitboi.Find(LED).gameObject.SetActive(true);
         yield return null;
     }
 
@@ -266,17 +271,22 @@ public class RemoteMathScript : MonoBehaviour
     IEnumerator IHandlePass()
     {
         BombModule.HandlePass();
+        SetLED("Green");
         yield return null;
     }
 
     IEnumerator IHandleStrike()
     {
         BombModule.HandleStrike();
+        string SavedLed = CurrentLed;
+        SetLED("Red");
+        yield return new WaitForSeconds(1.5f);
+        SetLED(SavedLed);
         yield return null;
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Just go solve the module xD";
+    private readonly string TwitchHelpMessage = @"Just go solve the module use `!# go` once you have";
 #pragma warning restore 414
 
     KMSelectable[] ProcessTwitchCommand(string command)
