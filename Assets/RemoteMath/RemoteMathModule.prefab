@@ -3197,5 +3197,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ModuleType: remotemath
-  ModuleDisplayName: RemoteMath
+  ModuleDisplayName: Remote Math
   RequiresTimerVisibility: 0
