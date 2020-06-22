@@ -1,7 +1,10 @@
 using KModkit;
+using RemoteMath;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 public class RemoteMathScript : MonoBehaviour
@@ -12,6 +15,7 @@ public class RemoteMathScript : MonoBehaviour
     public KMSelectable ModuleSelect;
     public KMSelectable MainButton;
     public GameObject SecretCodeText;
+    public GameObject WelcomeText;
     public GameObject fakeStatusLitBoi;
     public GameObject Fruit1;
     public GameObject Fruit2;
@@ -25,9 +29,50 @@ public class RemoteMathScript : MonoBehaviour
     bool moduleSolved = false;
     bool allowedToSolve = false;
     bool isConnected = false;
+    bool moduleStartup = false;
+
+    bool __TwitchPlaysMode;
+    bool TwitchPlaysActive;
+    internal bool TwitchPlaysMode
+    {
+        get
+        {
+            return TwitchPlaysActive||__TwitchPlaysMode;
+        }
+        set
+        {
+            __TwitchPlaysMode = value;
+        }
+    }
+    readonly List<string> TwitchPlaysCodes = new List<string>();
 
     static int moduleIdCounter = 1;
     int moduleId;
+    internal string TwitchId;
+
+    void GetTwitchPlaysId()
+    {
+        Debug.Log("[RemoteMathCheck] A");
+        var gType = ReflectionHelper.FindType("TwitchGame", "TwitchPlaysAssembly");
+        Debug.Log("[RemoteMathCheck] B");
+        object comp = FindObjectOfType(gType);
+        Debug.Log("[RemoteMathCheck] C");
+        var TwitchPlaysObj = comp.GetType().GetField("Modules", BindingFlags.Public | BindingFlags.Instance).GetValue(comp);
+        Debug.Log("[RemoteMathCheck] D");
+        IEnumerable TwitchPlaysModules = (IEnumerable)TwitchPlaysObj;
+        Debug.Log("[RemoteMathCheck] E");
+        foreach (object Module in TwitchPlaysModules)
+        {
+            var Behaviour = (MonoBehaviour)(Module.GetType().GetField("BombComponent", BindingFlags.Public | BindingFlags.Instance).GetValue(Module));
+            Debug.Log("[RemoteMathCheck] F");
+            var RMath = Behaviour.GetComponent<RemoteMathScript>();
+            Debug.Log("[RemoteMathCheck] G");
+            if (RMath == this)
+            {
+                TwitchId = (string)Module.GetType().GetProperty("Code", BindingFlags.Public | BindingFlags.Instance).GetValue(Module, null);
+            }
+        }
+    }
 
     void Start()
     {
@@ -41,7 +86,16 @@ public class RemoteMathScript : MonoBehaviour
 
         MainButton.OnInteract += delegate ()
         {
-            if (allowedToSolve && !moduleSolved)
+            if (!moduleStartup)
+            {
+                SecretCodeText.SetActive(true);
+                WelcomeText.SetActive(false);
+                moduleStartup = true;
+                StartCoroutine(StartWebsocketClient());
+                return false;
+            }
+            if (moduleSolved) return false;
+            if (allowedToSolve)
             {
                 moduleSolved = true;
                 HandlePass();
@@ -51,18 +105,16 @@ public class RemoteMathScript : MonoBehaviour
 
         Fruit1.SetActive(false);
         Fruit2.SetActive(false);
-
-        StartCoroutine(StartWebsocketClient());
     }
 
     void OnDestroy()
     {
-        RemoteMathApi.Stop();
+        if (moduleStartup && isConnected) RemoteMathApi.Stop();
     }
 
     IEnumerator StartWebsocketClient()
     {
-        RemoteMathApi = new RemoteMathWSAPI.Handler();
+        RemoteMathApi = new RemoteMathWSAPI.Handler(this);
         RemoteMathApi.PuzzleCode += ReceivedPuzzleCode;
         RemoteMathApi.PuzzleComplete += ReceivedPuzzleComplete;
         RemoteMathApi.PuzzleStrike += ReceivedPuzzleStrike;
@@ -71,6 +123,7 @@ public class RemoteMathScript : MonoBehaviour
         RemoteMathApi.Connected += WSConnected;
         RemoteMathApi.Reconnected += WSReconnected;
         RemoteMathApi.Disconnected += WSDisconnected;
+        RemoteMathApi.PuzzleTwitchCode += ReceivedPuzzleTwitchPlaysCode;
         RemoteMathApi.Start();
         SetLED("Yellow");
         WaitForWebsocketTimeout();
@@ -126,6 +179,11 @@ public class RemoteMathScript : MonoBehaviour
         UnityMainThreadDispatcher.Instance().Enqueue(SendBombDetails());
         SecretCode = e.Code;
         SetSecretCode(e.Code);
+    }
+
+    void ReceivedPuzzleTwitchPlaysCode(RemoteMathWSAPI.PuzzleTwitchCodeEventArgs e)
+    {
+        TwitchPlaysCodes.Add(e.Code);
     }
 
     void TriggerModuleSolve()
@@ -286,16 +344,38 @@ public class RemoteMathScript : MonoBehaviour
     }
 
 #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Just go solve the module use `!# go` once you have";
-#pragma warning restore 414
+    private readonly string TwitchHelpMessage = @"Use `!{0} go` to start the module and then use it again once you have solved it.";
 
-    KMSelectable[] ProcessTwitchCommand(string command)
+    IEnumerator ProcessTwitchCommand(string command)
     {
         command = command.ToLowerInvariant().Trim();
+        Debug.Log(command);
         if (command == "go")
         {
-            return new KMSelectable[] { MainButton.GetComponent<KMSelectable>() };
+            yield return null;
+            TwitchPlaysMode = true;
+            GetTwitchPlaysId();
+            MainButton.OnInteract();
         }
-        return null;
+        else if (Regex.IsMatch(command, @"^check +[0-9]{3}$"))
+        {
+            if (TwitchPlaysMode)
+            {
+                string[] vs = command.Split(' ');
+                string Code = vs.TakeLast(1).Join();
+                yield return null;
+                if (TwitchPlaysCodes.Contains(Code))
+                {
+                    RemoteMathApi.Send("PuzzleActivateTwitchCode::" + Code);
+                    yield return "sendtochat The requested expert module for Remote Math {1} has been activated";
+                    yield return "strike";
+                    yield return "solve";
+                }
+                else
+                {
+                    yield return "sendtochat The requested expert module for Remote Math {1} doesn't exist";
+                }
+            }
+        }
     }
 }
