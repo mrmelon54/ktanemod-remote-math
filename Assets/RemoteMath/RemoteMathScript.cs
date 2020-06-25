@@ -37,7 +37,7 @@ public class RemoteMathScript : MonoBehaviour
     {
         get
         {
-            return TwitchPlaysActive||__TwitchPlaysMode;
+            return TwitchPlaysActive || __TwitchPlaysMode;
         }
         set
         {
@@ -83,6 +83,7 @@ public class RemoteMathScript : MonoBehaviour
             Lights[i].range *= scalar;
 
         SetSecretCode("");
+        SetLED("Off");
 
         MainButton.OnInteract += delegate ()
         {
@@ -290,7 +291,7 @@ public class RemoteMathScript : MonoBehaviour
         {
             transformfordafakestatuslitboi.GetChild(i).gameObject.SetActive(false);
         }
-        transformfordafakestatuslitboi.Find(LED).gameObject.SetActive(true);
+        if (LED != "Off") transformfordafakestatuslitboi.Find(LED).gameObject.SetActive(true);
         yield return null;
     }
 
