@@ -14,8 +14,8 @@ MonoBehaviour:
   id: remotemath
   title: Remote Math
   author: MrMelon
-  description: "Remote Math 2.1\nYou're telling me bombs now connect to the internet?\n\r\nModule
+  description: "Remote Math 2.2\nYou're telling me bombs now connect to the internet?\n\r\nModule
     ID: remotemath\n\r\nCreated by: MrMelon\r\n\r\nManual available here:\r\nhttps://ktane.timwi.de/HTML/Remote%20Math.html"
-  version: 2.1
+  version: 2.2
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 262b07e19aa88ab46a76c80ef239066d, type: 3}
