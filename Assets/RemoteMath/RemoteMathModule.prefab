@@ -418,7 +418,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &1491433303474166
 GameObject:
   m_ObjectHideFlags: 1
@@ -800,7 +800,7 @@ Transform:
   m_GameObject: {fileID: 1286487846981234}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.0026900005, z: 0}
-  m_LocalScale: {x: 0.75, y: 1, z: 0.75}
+  m_LocalScale: {x: 0.75, y: 0.8, z: 0.75}
   m_Children:
   - {fileID: 4316837614732112}
   - {fileID: 4657766246368818}
@@ -857,7 +857,7 @@ Transform:
   m_GameObject: {fileID: 1769902960551500}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.0026900005, z: 0}
-  m_LocalScale: {x: 0.75, y: 1, z: 0.75}
+  m_LocalScale: {x: 0.75, y: 0.8, z: 0.75}
   m_Children:
   - {fileID: 4528282417173898}
   - {fileID: 4960182877427404}
@@ -1013,7 +1013,7 @@ Transform:
   m_GameObject: {fileID: 1358842262912810}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.0026900005, z: 0}
-  m_LocalScale: {x: 0.75, y: 1, z: 0.75}
+  m_LocalScale: {x: 0.75, y: 0.8, z: 0.75}
   m_Children:
   - {fileID: 4830552869619500}
   - {fileID: 4847855525301928}
@@ -1029,7 +1029,7 @@ Transform:
   m_GameObject: {fileID: 1831804878541808}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.0026900005, z: 0}
-  m_LocalScale: {x: 0.75, y: 1, z: 0.75}
+  m_LocalScale: {x: 0.75, y: 0.8, z: 0.75}
   m_Children:
   - {fileID: 4806900131918526}
   - {fileID: 4788496024810738}
@@ -1294,7 +1294,7 @@ Transform:
   m_GameObject: {fileID: 1319957555897166}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.0026900005, z: 0}
-  m_LocalScale: {x: 0.75, y: 1, z: 0.75}
+  m_LocalScale: {x: 0.75, y: 0.8, z: 0.75}
   m_Children:
   - {fileID: 4856201936753380}
   - {fileID: 4381107580890268}
@@ -1375,7 +1375,7 @@ Transform:
   m_GameObject: {fileID: 1470879396211260}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.0026900005, z: 0}
-  m_LocalScale: {x: 0.75, y: 1, z: 0.75}
+  m_LocalScale: {x: 0.75, y: 0.8, z: 0.75}
   m_Children:
   - {fileID: 4948464083026714}
   - {fileID: 4979541491958276}
@@ -3101,6 +3101,7 @@ MonoBehaviour:
   SecretCodeText: {fileID: 1020100878612764}
   WelcomeText: {fileID: 1061048414587682}
   fakeStatusLitBoi: {fileID: 1806150558994122}
+  realStatusLitBoi: {fileID: 1490993736790442}
   Fruit1: {fileID: 1125378116905192}
   Fruit2: {fileID: 1235132023373996}
   FruitMats:

@@ -14,3 +14,7 @@ Version 2.0
 
 Version 2.1
   - LED is now off when the module starts
+
+Version 2.2
+  - Fixed missing LED
+  - Fixed LED clipping Twitch Plays label

@@ -17,6 +17,7 @@ public class RemoteMathScript : MonoBehaviour
     public GameObject SecretCodeText;
     public GameObject WelcomeText;
     public GameObject fakeStatusLitBoi;
+    public GameObject realStatusLitBoi;
     public GameObject Fruit1;
     public GameObject Fruit2;
     public Material[] FruitMats;
@@ -286,12 +287,14 @@ public class RemoteMathScript : MonoBehaviour
     IEnumerator ShowLED(string LED)
     {
         CurrentLed = LED;
+        realStatusLitBoi.SetActive(false);
         Transform transformfordafakestatuslitboi = fakeStatusLitBoi.transform;
         for (int i = 0; i < transformfordafakestatuslitboi.childCount; i++)
         {
             transformfordafakestatuslitboi.GetChild(i).gameObject.SetActive(false);
         }
         if (LED != "Off") transformfordafakestatuslitboi.Find(LED).gameObject.SetActive(true);
+        else realStatusLitBoi.SetActive(true);
         yield return null;
     }
 
