@@ -18,3 +18,10 @@ Version 2.1
 Version 2.2
   - Fixed missing LED
   - Fixed LED clipping Twitch Plays label
+
+Version 2.3
+  - Logging from the websocket client is outputted by the modules logging
+
+Version 2.4
+  - Fixed ping cycle so the websocket client should know when the server disconnects
+

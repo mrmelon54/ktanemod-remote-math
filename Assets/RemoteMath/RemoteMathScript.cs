@@ -144,7 +144,7 @@ public class RemoteMathScript : MonoBehaviour
 
     void ReceivedPuzzleLog(RemoteMathWSAPI.PuzzleLogEventArgs e)
     {
-        Debug.LogFormat("[Remote Math #{0}] Server message: {1}", moduleId, e.Message);
+        Debug.LogFormat("[Remote Math #{0}] {2}: {1}", moduleId, e.Message, e.FromServer ? "Server message" : "Websocket API");
     }
 
     IEnumerator SendPuzzleFruit()
@@ -349,6 +349,7 @@ public class RemoteMathScript : MonoBehaviour
 
 #pragma warning disable 414
     private readonly string TwitchHelpMessage = @"Use `!{0} go` to start the module and then use it again once you have solved it.";
+#pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand(string command)
     {
