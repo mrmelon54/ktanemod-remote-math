@@ -15,6 +15,7 @@ public class RemoteMathWSAPI : MonoBehaviour
 
     public class PuzzleLogEventArgs : EventArgs
     {
+        public bool FromServer = false;
         public string Message;
     }
     public delegate void PuzzleLogEventHandler(PuzzleLogEventArgs e);
@@ -112,6 +113,7 @@ public class RemoteMathWSAPI : MonoBehaviour
         {
             if (!isRunning()) return;
             ws.Send("stephanie");
+            UnityMainThreadDispatcher.Instance().Enqueue(StartPingChecker());
         }
 
         private void OnPuzzleError()
@@ -131,8 +133,16 @@ public class RemoteMathWSAPI : MonoBehaviour
 
         private void OnPuzzleLog(string a)
         {
-            PuzzleLogEventArgs e = new PuzzleLogEventArgs();
-            e.Message = a;
+            OnPuzzleLog(a, false);
+        }
+
+        private void OnPuzzleLog(string a, bool FromServer)
+        {
+            PuzzleLogEventArgs e = new PuzzleLogEventArgs
+            {
+                FromServer = FromServer,
+                Message = a
+            };
             PuzzleLog.Invoke(e);
         }
 
@@ -156,9 +166,8 @@ public class RemoteMathWSAPI : MonoBehaviour
 
         private void onError(object sender, ErrorEventArgs e)
         {
-            Debug.Log("[RemoteMathWSAPI] Websocket client error");
-            Debug.Log(e.Exception);
-            Debug.Log(e.Message);
+            OnPuzzleLog("Websocket client error");
+            OnPuzzleLog(e.Message);
             OnPuzzleError();
         }
 
@@ -181,19 +190,19 @@ public class RemoteMathWSAPI : MonoBehaviour
             //TlsHandshakeFailure
             if (e.Code == 1015 && ws.SslConfiguration.EnabledSslProtocols != sslProtocolHack)
             {
-                Debug.Log("[RemoteMathWSAPI] Fixing SSL failure");
+                OnPuzzleLog("Fixing SSL failure");
                 ws.SslConfiguration.EnabledSslProtocols = sslProtocolHack;
                 ws.Connect();
                 return;
             }
             if (e.Code == 1006)
             {
-                Debug.Log("[RemoteMathWSAPI] This error should never occur");
+                OnPuzzleLog("This error should never occur");
             }
-            Debug.Log("[RemoteMathWSAPI] Disconnected from server");
-            Debug.Log(e.Code);
-            Debug.Log(e.Reason);
-            Debug.Log(e.WasClean);
+            OnPuzzleLog("Disconnected from server");
+            OnPuzzleLog(e.Code.ToString());
+            OnPuzzleLog(e.Reason);
+            OnPuzzleLog(e.WasClean.ToString());
             if (e.Code == 1002)
                 shouldBeRunning = false;
             OnDisconnected(new EventArgs());
@@ -206,17 +215,16 @@ public class RemoteMathWSAPI : MonoBehaviour
                 Send("pong");
                 DateTime baseDate = new DateTime(1970, 1, 1);
                 lastPong = (DateTime.Now - baseDate).TotalMilliseconds;
-                UnityMainThreadDispatcher.Instance().Enqueue(StartPingChecker());
                 return;
             }
             else if (e.Data == "PuzzleComplete")
             {
-                Debug.Log("[RemoteMathWSAPI] Received data: PuzzleComplete");
+                OnPuzzleLog("Received data: PuzzleComplete");
                 OnPuzzleComplete();
             }
             else if (e.Data == "PuzzleStrike")
             {
-                Debug.Log("[RemoteMathWSAPI] Received data: PuzzleStrike");
+                OnPuzzleLog("Received data: PuzzleStrike");
                 OnPuzzleStrike();
             }
             else if (e.Data.StartsWith(PuzzleCodePrefix))
@@ -224,13 +232,13 @@ public class RemoteMathWSAPI : MonoBehaviour
                 if (e.Data.Length == (PuzzleCodePrefix.Length + 6))
                 {
                     string CodeValue = e.Data.Substring(PuzzleCodePrefix.Length);
-                    Debug.Log("[RemoteMathWSAPI] Received data: " + e.Data);
-                    Send("PuzzleTwitchPlaysMode::"+RMath.TwitchId);
+                    OnPuzzleLog("Received data: " + e.Data);
+                    Send("PuzzleTwitchPlaysMode::" + RMath.TwitchId);
                     OnPuzzleCode(CodeValue);
                 }
                 else
                 {
-                    Debug.Log("[RemoteMathWSAPI] Invalid packet received");
+                    OnPuzzleLog("Invalid packet received");
                     OnPuzzleError();
                 }
             }
@@ -239,7 +247,7 @@ public class RemoteMathWSAPI : MonoBehaviour
                 if (e.Data.Length == (PuzzleTwitchCodePrefix.Length + 3))
                 {
                     string CodeValue = e.Data.Substring(PuzzleTwitchCodePrefix.Length);
-                    Debug.Log("[RemoteMathWSAPI] Received data: " + e.Data);
+                    OnPuzzleLog("Received data: " + e.Data);
                     OnPuzzleTwitchCode(CodeValue);
                 }
             }
@@ -249,11 +257,11 @@ public class RemoteMathWSAPI : MonoBehaviour
             }
             else if (e.Data == "ClientSelected")
             {
-                Debug.Log("[RemoteMathWSAPI] Client selected on server end");
+                OnPuzzleLog("Client selected on server end");
             }
             else
             {
-                Debug.Log("[RemoteMathWSAPI] Invalid packet received");
+                OnPuzzleLog("Invalid packet received");
                 OnPuzzleError();
             }
         }
@@ -276,8 +284,10 @@ public class RemoteMathWSAPI : MonoBehaviour
             double latestPong = (DateTime.Now - baseDate).TotalMilliseconds;
             if (latestPong - lastPong > 6000)
             {
-                Debug.Log("[RemoteMathWSAPI] Ping check failed");
-                ws.Close();
+                OnPuzzleLog("Last ping was at " + lastPong.ToString());
+                OnPuzzleLog("Ping check failed");
+                if (ws != null) ws.Close();
+                UnityMainThreadDispatcher.Instance().StopCoroutine(IHandlePingCheck());
             }
         }
 
