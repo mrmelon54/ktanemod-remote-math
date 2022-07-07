@@ -25,3 +25,6 @@ Version 2.3
 Version 2.4
   - Fixed ping cycle so the websocket client should know when the server disconnects
 
+Version 2.5
+  - Some improvements to TP points by VFlyer
+
