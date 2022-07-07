@@ -31,6 +31,7 @@ public class RemoteMathScript : MonoBehaviour
     bool allowedToSolve = false;
     bool isConnected = false;
     bool moduleStartup = false;
+    bool hasErrored = false;
 
     bool __TwitchPlaysMode;
     bool TwitchPlaysActive;
@@ -213,6 +214,7 @@ public class RemoteMathScript : MonoBehaviour
         Debug.LogFormat("[Remote Math #{0}] Puzzle Error", moduleId);
         SetSecretCode("ERROR");
         SetLED("Blue");
+        hasErrored = true;
         RemoteMathApi.Stop();
         TriggerModuleSolve();
     }
@@ -240,6 +242,7 @@ public class RemoteMathScript : MonoBehaviour
         SetSecretCode("ERROR");
         SetLED("Blue");
         isConnected = false;
+        hasErrored = true;
         RemoteMathApi.Stop();
         TriggerModuleSolve();
     }
@@ -360,6 +363,8 @@ public class RemoteMathScript : MonoBehaviour
             yield return null;
             TwitchPlaysMode = true;
             GetTwitchPlaysId();
+            if (!hasErrored && allowedToSolve)
+                yield return "awardpointsonsolve 8";
             MainButton.OnInteract();
         }
         else if (Regex.IsMatch(command, @"^check +[0-9]{3}$"))
