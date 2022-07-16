@@ -35,17 +35,13 @@ public class RemoteMathScript : MonoBehaviour
 
     bool __TwitchPlaysMode;
     bool TwitchPlaysActive;
+
     internal bool TwitchPlaysMode
     {
-        get
-        {
-            return TwitchPlaysActive || __TwitchPlaysMode;
-        }
-        set
-        {
-            __TwitchPlaysMode = value;
-        }
+        get { return TwitchPlaysActive || __TwitchPlaysMode; }
+        set { __TwitchPlaysMode = value; }
     }
+
     readonly List<string> TwitchPlaysCodes = new List<string>();
 
     static int moduleIdCounter = 1;
@@ -61,17 +57,17 @@ public class RemoteMathScript : MonoBehaviour
         Debug.Log("[RemoteMathCheck] C");
         var TwitchPlaysObj = comp.GetType().GetField("Modules", BindingFlags.Public | BindingFlags.Instance).GetValue(comp);
         Debug.Log("[RemoteMathCheck] D");
-        IEnumerable TwitchPlaysModules = (IEnumerable)TwitchPlaysObj;
+        IEnumerable TwitchPlaysModules = (IEnumerable) TwitchPlaysObj;
         Debug.Log("[RemoteMathCheck] E");
         foreach (object Module in TwitchPlaysModules)
         {
-            var Behaviour = (MonoBehaviour)(Module.GetType().GetField("BombComponent", BindingFlags.Public | BindingFlags.Instance).GetValue(Module));
+            var Behaviour = (MonoBehaviour) (Module.GetType().GetField("BombComponent", BindingFlags.Public | BindingFlags.Instance).GetValue(Module));
             Debug.Log("[RemoteMathCheck] F");
             var RMath = Behaviour.GetComponent<RemoteMathScript>();
             Debug.Log("[RemoteMathCheck] G");
             if (RMath == this)
             {
-                TwitchId = (string)Module.GetType().GetProperty("Code", BindingFlags.Public | BindingFlags.Instance).GetValue(Module, null);
+                TwitchId = (string) Module.GetType().GetProperty("Code", BindingFlags.Public | BindingFlags.Instance).GetValue(Module, null);
             }
         }
     }
@@ -87,7 +83,7 @@ public class RemoteMathScript : MonoBehaviour
         SetSecretCode("");
         SetLED("Off");
 
-        MainButton.OnInteract += delegate ()
+        MainButton.OnInteract += delegate()
         {
             if (!moduleStartup)
             {
@@ -97,12 +93,14 @@ public class RemoteMathScript : MonoBehaviour
                 StartCoroutine(StartWebsocketClient());
                 return false;
             }
+
             if (moduleSolved) return false;
             if (allowedToSolve)
             {
                 moduleSolved = true;
                 HandlePass();
             }
+
             return false;
         };
 
@@ -140,7 +138,6 @@ public class RemoteMathScript : MonoBehaviour
 
     void Update()
     {
-
     }
 
     void ReceivedPuzzleLog(RemoteMathWSAPI.PuzzleLogEventArgs e)
@@ -155,6 +152,7 @@ public class RemoteMathScript : MonoBehaviour
         {
             fruitNumbers.Add(Convert.ToInt32(Math.Floor(UnityEngine.Random.Range(0f, FruitMats.Length))));
         }
+
         Fruit1.transform.Find("FruitImage").gameObject.GetComponent<MeshRenderer>().material = FruitMats[fruitNumbers[0]];
         Fruit2.transform.Find("FruitImage").gameObject.GetComponent<MeshRenderer>().material = FruitMats[fruitNumbers[1]];
         Fruit1.transform.Find("FruitText").gameObject.GetComponent<TextMesh>().text = FruitNames[fruitNumbers[2]];
@@ -248,7 +246,6 @@ public class RemoteMathScript : MonoBehaviour
     }
 
 
-
     IEnumerator ButtonPressAnimation()
     {
         yield return null;
@@ -296,6 +293,7 @@ public class RemoteMathScript : MonoBehaviour
         {
             transformfordafakestatuslitboi.GetChild(i).gameObject.SetActive(false);
         }
+
         if (LED != "Off") transformfordafakestatuslitboi.Find(LED).gameObject.SetActive(true);
         else realStatusLitBoi.SetActive(true);
         yield return null;
@@ -364,7 +362,7 @@ public class RemoteMathScript : MonoBehaviour
             TwitchPlaysMode = true;
             GetTwitchPlaysId();
             if (!hasErrored && allowedToSolve)
-                yield return "awardpointsonsolve 8";
+                yield return "awardpointsonsolve -8";
             MainButton.OnInteract();
         }
         else if (Regex.IsMatch(command, @"^check +[0-9]{3}$"))

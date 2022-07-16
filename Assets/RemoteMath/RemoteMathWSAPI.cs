@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections;
+using System.Net;
+using System.Security.Authentication;
 using System.Threading;
 using UnityEngine;
 using WebSocketSharp;
 
 public class RemoteMathWSAPI : MonoBehaviour
 {
-
     public class PuzzleCodeEventArgs : EventArgs
     {
         public string Code;
     }
+
     public delegate void PuzzleCodeEventHandler(PuzzleCodeEventArgs e);
 
     public class PuzzleLogEventArgs : EventArgs
@@ -18,25 +20,21 @@ public class RemoteMathWSAPI : MonoBehaviour
         public bool FromServer = false;
         public string Message;
     }
+
     public delegate void PuzzleLogEventHandler(PuzzleLogEventArgs e);
 
     public class PuzzleTwitchCodeEventArgs : EventArgs
     {
         public string Code;
     }
+
     public delegate void PuzzleTwitchCodeEventHandler(PuzzleTwitchCodeEventArgs e);
 
     public delegate void EmptyEventHandler();
 
-    public enum SslProtocolsHack
-    {
-        Tls = 192,
-        Tls11 = 768,
-        Tls12 = 3072
-    }
     public class Handler
     {
-        private readonly string websocketaddress = "ws://remote-math.onpointcoding.net";
+        private readonly string websocketaddress = "ws://remote-math.mrmelon54.xyz";
         private Thread t = null;
         private bool shouldBeRunning = false;
         private WebSocket ws = null;
@@ -46,12 +44,10 @@ public class RemoteMathWSAPI : MonoBehaviour
         private double lastPong = 0;
         private readonly bool reconnectMode = false;
         private RemoteMathScript RMath;
+
         public bool TwitchPlaysMode
         {
-            get
-            {
-                return RMath.TwitchPlaysMode;
-            }
+            get { return RMath.TwitchPlaysMode; }
         }
 
         public event EmptyEventHandler PuzzleError;
@@ -68,6 +64,8 @@ public class RemoteMathWSAPI : MonoBehaviour
 
         public void Start()
         {
+            ServicePointManager.SecurityProtocol = (SecurityProtocolType)3072;
+
             if (!isRunning())
             {
                 shouldBeRunning = true;
@@ -93,6 +91,7 @@ public class RemoteMathWSAPI : MonoBehaviour
         {
             Debug.Log("[RemoteMathWSAPI] Connecting to " + websocketaddress);
             ws = new WebSocket(websocketaddress);
+            ws.SslConfiguration.EnabledSslProtocols =  (SslProtocols) 3072;
             using (ws)
             {
                 ws.OnError += onError;
@@ -105,6 +104,7 @@ public class RemoteMathWSAPI : MonoBehaviour
                     Thread.Sleep(100);
                 }
             }
+
             Debug.Log("[RemoteMathWSAPI] Reached end of websocket handler. Stopping...");
             ws = null;
         }
@@ -186,19 +186,9 @@ public class RemoteMathWSAPI : MonoBehaviour
 
         private void onClose(object sender, CloseEventArgs e)
         {
-            var sslProtocolHack = (System.Security.Authentication.SslProtocols)(SslProtocolsHack.Tls12 | SslProtocolsHack.Tls11 | SslProtocolsHack.Tls);
             //TlsHandshakeFailure
-            if (e.Code == 1015 && ws.SslConfiguration.EnabledSslProtocols != sslProtocolHack)
-            {
-                OnPuzzleLog("Fixing SSL failure");
-                ws.SslConfiguration.EnabledSslProtocols = sslProtocolHack;
-                ws.Connect();
-                return;
-            }
-            if (e.Code == 1006)
-            {
-                OnPuzzleLog("This error should never occur");
-            }
+            if (e.Code == 1015) OnPuzzleLog("SSL failure");
+            if (e.Code == 1006) OnPuzzleLog("This error should never occur");
             OnPuzzleLog("Disconnected from server");
             OnPuzzleLog(e.Code.ToString());
             OnPuzzleLog(e.Reason);
@@ -217,17 +207,22 @@ public class RemoteMathWSAPI : MonoBehaviour
                 lastPong = (DateTime.Now - baseDate).TotalMilliseconds;
                 return;
             }
-            else if (e.Data == "PuzzleComplete")
+
+            if (e.Data == "PuzzleComplete")
             {
                 OnPuzzleLog("Received data: PuzzleComplete");
                 OnPuzzleComplete();
+                return;
             }
-            else if (e.Data == "PuzzleStrike")
+
+            if (e.Data == "PuzzleStrike")
             {
                 OnPuzzleLog("Received data: PuzzleStrike");
                 OnPuzzleStrike();
+                return;
             }
-            else if (e.Data.StartsWith(PuzzleCodePrefix))
+
+            if (e.Data.StartsWith(PuzzleCodePrefix))
             {
                 if (e.Data.Length == (PuzzleCodePrefix.Length + 6))
                 {
@@ -241,8 +236,11 @@ public class RemoteMathWSAPI : MonoBehaviour
                     OnPuzzleLog("Invalid packet received");
                     OnPuzzleError();
                 }
+
+                return;
             }
-            else if (e.Data.StartsWith(PuzzleTwitchCodePrefix))
+
+            if (e.Data.StartsWith(PuzzleTwitchCodePrefix))
             {
                 if (e.Data.Length == (PuzzleTwitchCodePrefix.Length + 3))
                 {
@@ -250,15 +248,12 @@ public class RemoteMathWSAPI : MonoBehaviour
                     OnPuzzleLog("Received data: " + e.Data);
                     OnPuzzleTwitchCode(CodeValue);
                 }
+
+                return;
             }
-            else if (e.Data.StartsWith(PuzzleLogPrefix))
-            {
-                OnPuzzleLog(e.Data.Substring(PuzzleLogPrefix.Length));
-            }
-            else if (e.Data == "ClientSelected")
-            {
-                OnPuzzleLog("Client selected on server end");
-            }
+
+            if (e.Data.StartsWith(PuzzleLogPrefix)) OnPuzzleLog(e.Data.Substring(PuzzleLogPrefix.Length));
+            else if (e.Data == "ClientSelected") OnPuzzleLog("Client selected on server end");
             else
             {
                 OnPuzzleLog("Invalid packet received");
@@ -268,7 +263,7 @@ public class RemoteMathWSAPI : MonoBehaviour
 
         public void Send(string data)
         {
-            ws.SendAsync(data, delegate (bool d) { });
+            ws.SendAsync(data, delegate(bool d) { });
         }
 
         IEnumerator StartPingChecker()
@@ -292,23 +287,24 @@ public class RemoteMathWSAPI : MonoBehaviour
         }
 
 
-
-
         // Events
 
         public event EventHandler Connected;
+
         protected virtual void OnConnected(EventArgs e)
         {
             Connected.Invoke(this, e);
         }
 
         public event EventHandler Reconnected;
+
         protected virtual void OnReconnectMode(EventArgs e)
         {
             Reconnected.Invoke(this, e);
         }
 
         public event EventHandler Disconnected;
+
         protected virtual void OnDisconnected(EventArgs e)
         {
             Disconnected.Invoke(this, e);
