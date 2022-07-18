@@ -29,7 +29,6 @@ namespace RemoteMath
         [FormerlySerializedAs("Lights")] public Light[] lights;
         [FormerlySerializedAs("FruitNames")] public string[] fruitNames;
         private RemoteMathWsApi.Handler _remoteMathApi;
-        private string _secretCode = "";
         private string _currentLed;
 
         private bool _moduleSolved;
@@ -59,26 +58,19 @@ namespace RemoteMath
 
         private void GetTwitchPlaysId()
         {
-            Debug.Log("[RemoteMathCheck] A");
             var gType = ReflectionHelper.FindType("TwitchGame", "TwitchPlaysAssembly");
-            Debug.Log("[RemoteMathCheck] B");
             object comp = FindObjectOfType(gType);
-            Debug.Log("[RemoteMathCheck] C");
             if (comp == null) return;
             var twitchModules = comp.GetType().GetField("Modules", BindingFlags.Public | BindingFlags.Instance);
             if (twitchModules == null) return;
             var twitchPlaysObj = twitchModules.GetValue(comp);
-            Debug.Log("[RemoteMathCheck] D");
             var twitchPlaysModules = (IEnumerable) twitchPlaysObj;
-            Debug.Log("[RemoteMathCheck] E");
             foreach (var module in twitchPlaysModules)
             {
                 var bombComponent = module.GetType().GetField("BombComponent", BindingFlags.Public | BindingFlags.Instance);
                 if (bombComponent == null) continue;
                 var behaviour = (MonoBehaviour) bombComponent.GetValue(module);
-                Debug.Log("[RemoteMathCheck] F");
                 var rMath = behaviour.GetComponent<RemoteMathScript>();
-                Debug.Log("[RemoteMathCheck] G");
                 if (rMath != this) continue;
                 var moduleCode = module.GetType().GetProperty("Code", BindingFlags.Public | BindingFlags.Instance);
                 if (moduleCode != null) TwitchId = (string) moduleCode.GetValue(module, null);
@@ -118,7 +110,7 @@ namespace RemoteMath
             fruit2.SetActive(false);
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
             if (_moduleStartup && _isConnected) _remoteMathApi.Stop();
         }
@@ -163,35 +155,34 @@ namespace RemoteMath
             yield return null;
         }
 
-        IEnumerator SendBombDetails()
+        private IEnumerator SendBombDetails()
         {
-            int batteryCount = bombInfo.GetBatteryCount();
-            int portCount = bombInfo.GetPortCount();
+            var batteryCount = bombInfo.GetBatteryCount();
+            var portCount = bombInfo.GetPortCount();
             Debug.LogFormat("[Remote Math #{0}] Battery Count: {1}, Port Count: {2}", _moduleId, batteryCount, portCount);
-            _remoteMathApi.Send("BombDetails::" + batteryCount.ToString() + "::" + portCount.ToString());
+            _remoteMathApi.Send("BombDetails::" + batteryCount + "::" + portCount);
             yield return null;
         }
 
-        void ReceivedPuzzleCode(RemoteMathWsApi.PuzzleCodeEventArgs e)
+        private void ReceivedPuzzleCode(RemoteMathWsApi.PuzzleCodeEventArgs e)
         {
             Debug.LogFormat("[Remote Math #{0}] Puzzle Code: {1}", _moduleId, e.Code);
             UnityMainThreadDispatcher.Instance().Enqueue(SendPuzzleFruit());
             UnityMainThreadDispatcher.Instance().Enqueue(SendBombDetails());
-            _secretCode = e.Code;
             SetSecretCode(e.Code);
         }
 
-        void ReceivedPuzzleTwitchPlaysCode(RemoteMathWsApi.PuzzleTwitchCodeEventArgs e)
+        private void ReceivedPuzzleTwitchPlaysCode(RemoteMathWsApi.PuzzleTwitchCodeEventArgs e)
         {
             _twitchPlaysCodes.Add(e.Code);
         }
 
-        void TriggerModuleSolve()
+        private void TriggerModuleSolve()
         {
             _allowedToSolve = true;
         }
 
-        void ReceivedPuzzleComplete()
+        private void ReceivedPuzzleComplete()
         {
             Debug.LogFormat("[Remote Math #{0}] Puzzle Completed", _moduleId);
             SetSecretCode("DONE", true);
@@ -200,13 +191,13 @@ namespace RemoteMath
             TriggerModuleSolve();
         }
 
-        void ReceivedPuzzleStrike()
+        private void ReceivedPuzzleStrike()
         {
             Debug.LogFormat("[Remote Math #{0}] Puzzle Strike", _moduleId);
             HandleStrike();
         }
 
-        void ReceivedPuzzleError()
+        private void ReceivedPuzzleError()
         {
             Debug.LogFormat("[Remote Math #{0}] Puzzle Error", _moduleId);
             SetSecretCode("ERROR");
@@ -254,7 +245,7 @@ namespace RemoteMath
 
         private IEnumerator ShowSecretCode(string code, bool ignoreLineBreak)
         {
-            secretCodeText.GetComponent<TextMesh>().text = ignoreLineBreak || code.Length < 4 ? code : (code.Substring(0, 3) + "\n" + code.Substring(3));
+            secretCodeText.GetComponent<TextMesh>().text = ignoreLineBreak || code.Length < 4 ? code : code.Substring(0, 4) + "\n" + code.Substring(4);
             yield return null;
         }
 
