@@ -44,7 +44,7 @@ namespace RemoteMath
             private const string PuzzleCodePrefix = "PuzzleCode::";
             private const string PuzzleLogPrefix = "PuzzleLog::";
             private const string PuzzleTwitchCodePrefix = "PuzzleTwitchCode::";
-            private double _lastPong;
+            private double _lastPong = (DateTime.Now - DateTime.Now).TotalMilliseconds;
             private readonly RemoteMathScript _rMath;
 
             public event EmptyEventHandler PuzzleError;
@@ -145,6 +145,7 @@ namespace RemoteMath
             {
                 OnPuzzleLog("Websocket client error");
                 OnPuzzleLog(e.Message);
+                OnPuzzleLog(e.Exception.Message);
                 OnPuzzleError();
             }
 
@@ -184,6 +185,7 @@ namespace RemoteMath
                     {
                         case "ping":
                         {
+                            Debug.Log("Ping => Pong");
                             Send("pong");
                             var baseDate = new DateTime(1970, 1, 1);
                             _lastPong = (DateTime.Now - baseDate).TotalMilliseconds;
@@ -201,7 +203,7 @@ namespace RemoteMath
 
                     if (e.Data.StartsWith(PuzzleCodePrefix))
                     {
-                        if (e.Data.Length == (PuzzleCodePrefix.Length + 6))
+                        if (e.Data.Length == PuzzleCodePrefix.Length + 8)
                         {
                             var codeValue = e.Data.Substring(PuzzleCodePrefix.Length);
                             OnPuzzleLog("Received data: " + e.Data);
@@ -231,7 +233,7 @@ namespace RemoteMath
                     else if (e.Data == "ClientSelected") OnPuzzleLog("Client selected on server end");
                     else
                     {
-                        OnPuzzleLog("Invalid packet received");
+                        OnPuzzleLog("Invalid packet received: " + e.Data);
                         OnPuzzleError();
                     }
                 }
