@@ -36,6 +36,7 @@ namespace RemoteMath
         private bool _isConnected;
         private bool _moduleStartup;
         private bool _hasErrored;
+        private string _secretToken;
 
         private bool _twitchPlaysMode;
 #pragma warning disable CS0649
@@ -120,6 +121,7 @@ namespace RemoteMath
         {
             _remoteMathApi = new RemoteMathWsApi.Handler(this);
             _remoteMathApi.PuzzleCode += ReceivedPuzzleCode;
+            _remoteMathApi.PuzzleToken += ReceivedPuzzleToken;
             _remoteMathApi.PuzzleComplete += ReceivedPuzzleComplete;
             _remoteMathApi.PuzzleStrike += ReceivedPuzzleStrike;
             _remoteMathApi.PuzzleError += ReceivedPuzzleError;
@@ -127,7 +129,7 @@ namespace RemoteMath
             _remoteMathApi.Connected += WsConnected;
             _remoteMathApi.Disconnected += WsDisconnected;
             _remoteMathApi.PuzzleTwitchCode += ReceivedPuzzleTwitchPlaysCode;
-            _remoteMathApi.Start();
+            _remoteMathApi.Start(_secretToken);
             SetLed("Yellow");
             yield return WaitForWebsocketTimeout();
             yield return null;
@@ -170,6 +172,12 @@ namespace RemoteMath
             UnityMainThreadDispatcher.Instance().Enqueue(SendPuzzleFruit());
             UnityMainThreadDispatcher.Instance().Enqueue(SendBombDetails());
             SetSecretCode(e.Code);
+        }
+
+        private void ReceivedPuzzleToken(RemoteMathWsApi.PuzzleTokenEventArgs e)
+        {
+            Debug.LogFormat("[Remote Math #{0}] Puzzle Token: {1}", _moduleId, e.Token);
+            this._secretToken = e.Token;
         }
 
         private void ReceivedPuzzleTwitchPlaysCode(RemoteMathWsApi.PuzzleTwitchCodeEventArgs e)
@@ -218,13 +226,14 @@ namespace RemoteMath
         private void WsDisconnected(object sender, EventArgs e)
         {
             if (_allowedToSolve) return;
-            Debug.LogFormat("[Remote Math #{0}] WebSocket Disconnected", _moduleId);
+            Debug.LogFormat("[Remote Math #{0}] WebSocket Disconnected... attempting reconnect", _moduleId);
             SetSecretCode("ERROR");
-            SetLed("Blue");
+            SetLed("Purple");
             _isConnected = false;
             _hasErrored = true;
             _remoteMathApi.Stop();
-            TriggerModuleSolve();
+            if (_secretToken != "") _remoteMathApi.Start(_secretToken);
+            else TriggerModuleSolve();
         }
 
 

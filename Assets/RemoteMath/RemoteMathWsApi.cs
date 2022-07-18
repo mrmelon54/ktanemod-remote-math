@@ -17,6 +17,13 @@ namespace RemoteMath
 
         public delegate void PuzzleCodeEventHandler(PuzzleCodeEventArgs e);
 
+        public class PuzzleTokenEventArgs : EventArgs
+        {
+            public string Token;
+        }
+
+        public delegate void PuzzleTokenEventHandler(PuzzleTokenEventArgs e);
+
         public class PuzzleLogEventArgs : EventArgs
         {
             public bool FromServer;
@@ -41,16 +48,19 @@ namespace RemoteMath
             private Thread _t;
             private bool _shouldBeRunning;
             private WebSocket _ws;
+            private const string PuzzleTokenPrefix = "PuzzleToken::";
             private const string PuzzleCodePrefix = "PuzzleCode::";
             private const string PuzzleLogPrefix = "PuzzleLog::";
             private const string PuzzleTwitchCodePrefix = "PuzzleTwitchCode::";
             private double _lastPong = (DateTime.Now - DateTime.Now).TotalMilliseconds;
             private readonly RemoteMathScript _rMath;
+            private string _internalToken;
 
             public event EmptyEventHandler PuzzleError;
             public event EmptyEventHandler PuzzleComplete;
             public event EmptyEventHandler PuzzleStrike;
             public event PuzzleCodeEventHandler PuzzleCode;
+            public event PuzzleTokenEventHandler PuzzleToken;
             public event PuzzleLogEventHandler PuzzleLog;
             public event PuzzleTwitchCodeEventHandler PuzzleTwitchCode;
 
@@ -59,8 +69,9 @@ namespace RemoteMath
                 _rMath = rMath;
             }
 
-            public void Start()
+            public void Start(string token)
             {
+                this._internalToken = token;
                 ServicePointManager.SecurityProtocol = (SecurityProtocolType) 3072;
 
                 if (IsRunning()) return;
@@ -104,7 +115,16 @@ namespace RemoteMath
             public void Login()
             {
                 if (!IsRunning()) return;
-                _ws.Send("stephanie");
+                if (this._internalToken == "")
+                {
+                    _ws.Send("stephanie");
+                }
+                else
+                {
+                    _ws.Send("timothy");
+                    _ws.Send("PuzzleReactivate::" + this._internalToken);
+                }
+
                 UnityMainThreadDispatcher.Instance().Enqueue(StartPingChecker());
             }
 
@@ -135,6 +155,12 @@ namespace RemoteMath
                 if (PuzzleCode != null) PuzzleCode.Invoke(e);
             }
 
+            private void OnPuzzleToken(string incomingToken)
+            {
+                var e = new PuzzleTokenEventArgs {Token = incomingToken};
+                if (PuzzleToken != null) PuzzleToken.Invoke(e);
+            }
+
             private void OnPuzzleTwitchCode(string incomingCode)
             {
                 var e = new PuzzleTwitchCodeEventArgs {Code = incomingCode};
@@ -147,6 +173,8 @@ namespace RemoteMath
                 OnPuzzleLog(e.Message);
                 OnPuzzleLog(e.Exception.Message);
                 OnPuzzleError();
+                _internalToken = "";
+                OnPuzzleToken("");
             }
 
             private void OnOpen(object sender, object e)
@@ -201,6 +229,16 @@ namespace RemoteMath
                             return;
                     }
 
+                    if (e.Data.StartsWith(PuzzleTokenPrefix))
+                    {
+                        if (e.Data.Length == PuzzleTokenPrefix.Length + 32)
+                        {
+                            var tokenValue = e.Data.Substring(PuzzleTokenPrefix.Length);
+                            OnPuzzleLog("Received data: " + e.Data);
+                            OnPuzzleToken(tokenValue);
+                        }
+                    }
+
                     if (e.Data.StartsWith(PuzzleCodePrefix))
                     {
                         if (e.Data.Length == PuzzleCodePrefix.Length + 8)
@@ -234,7 +272,6 @@ namespace RemoteMath
                     else
                     {
                         OnPuzzleLog("Invalid packet received: " + e.Data);
-                        OnPuzzleError();
                     }
                 }
                 catch
