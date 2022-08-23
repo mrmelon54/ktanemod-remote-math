@@ -53,6 +53,7 @@ public class RemoteMathWsApi : MonoBehaviour
         private double _lastPong = (DateTime.Now - DateTime.Now).TotalMilliseconds;
         private readonly RemoteMathScript _rMath;
         private string _internalToken;
+        private int _closeCount;
 
         public event EmptyEventHandler PuzzleError;
         public event EmptyEventHandler PuzzleComplete;
@@ -69,7 +70,7 @@ public class RemoteMathWsApi : MonoBehaviour
 
         public void Start(string token)
         {
-            this._internalToken = token;
+            _internalToken = token;
             ServicePointManager.SecurityProtocol = (SecurityProtocolType) 3072;
 
             if (IsRunning()) return;
@@ -113,14 +114,14 @@ public class RemoteMathWsApi : MonoBehaviour
         public void Login()
         {
             if (!IsRunning()) return;
-            if (this._internalToken == "")
+            if (_internalToken == "")
             {
                 _ws.Send("stephanie");
             }
             else
             {
                 _ws.Send("timothy");
-                _ws.Send("PuzzleReactivate::" + this._internalToken);
+                _ws.Send("PuzzleReactivate::" + _internalToken);
             }
 
             UnityMainThreadDispatcher.Instance().Enqueue(StartPingChecker());
@@ -211,7 +212,6 @@ public class RemoteMathWsApi : MonoBehaviour
                 {
                     case "ping":
                     {
-                        Debug.Log("Ping => Pong");
                         Send("pong");
                         var baseDate = new DateTime(1970, 1, 1);
                         _lastPong = (DateTime.Now - baseDate).TotalMilliseconds;

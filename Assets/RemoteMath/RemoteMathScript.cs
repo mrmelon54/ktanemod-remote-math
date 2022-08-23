@@ -84,15 +84,17 @@ public class RemoteMathScript : MonoBehaviour
         try
         {
             //PathManager.LoadLibrary("ktanemod-remote-math-interface");
-            System.IO.File.Copy(
-                "mods/remotemath/dlls/ktanemod-remote-math-interface.so",
-                UnityEngine.Application.dataPath + "/Mono/x86_64/ktanemod-remote-math-interface.so",
-                true);
+            if (!Application.isEditor)
+                System.IO.File.Copy(
+                    "mods/remotemath/dlls/libktanemod-remote-math-interface.so",
+                    Application.dataPath + "/Mono/x86_64/libktanemod-remote-math-interface.so",
+                    true);
         }
         catch (NullReferenceException)
         {
             Debug.Log("NullReferenceException from KeepCoding");
         }
+
         Debug.Log("[After PathManager.LoadLibrary()]");
     }
 
@@ -154,6 +156,18 @@ public class RemoteMathScript : MonoBehaviour
         yield return null;
     }
 
+    private IEnumerator InternalStartWebsocketLater()
+    {
+        yield return new WaitForSeconds(5);
+        StartCoroutine(StartWebsocketClient());
+    }
+
+    private IEnumerator StartWebsocketLater()
+    {
+        StartCoroutine(InternalStartWebsocketLater());
+        yield return null;
+    }
+
     // ReSharper disable Unity.PerformanceAnalysis
     private void ReceivedPuzzleLog(RemoteMathWsApi.PuzzleLogEventArgs e)
     {
@@ -196,7 +210,7 @@ public class RemoteMathScript : MonoBehaviour
     private void ReceivedPuzzleToken(RemoteMathWsApi.PuzzleTokenEventArgs e)
     {
         Debug.LogFormat("[Remote Math #{0}] Puzzle Token: {1}", _moduleId, e.Token);
-        this._secretToken = e.Token;
+        _secretToken = e.Token;
     }
 
     private void ReceivedPuzzleTwitchPlaysCode(RemoteMathWsApi.PuzzleTwitchCodeEventArgs e)
@@ -251,7 +265,7 @@ public class RemoteMathScript : MonoBehaviour
         _isConnected = false;
         _hasErrored = true;
         _remoteMathApi.Stop();
-        if (_secretToken != "") _remoteMathApi.Start(_secretToken);
+        if (_secretToken != "") UnityMainThreadDispatcher.Instance().Enqueue(StartWebsocketLater());
         else TriggerModuleSolve();
     }
 
@@ -289,6 +303,7 @@ public class RemoteMathScript : MonoBehaviour
 
     private IEnumerator ShowLed(string led)
     {
+        Debug.LogFormat("[Remote Math #{0}] Show {1} LED", _moduleId, led);
         _currentLed = led;
         realStatusLitBoi.SetActive(false);
         var transformForFakeStatusLitBoi = fakeStatusLitBoi.transform;
