@@ -78,10 +78,27 @@ public class RemoteMathScript : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        Debug.Log("[Before PathManager.LoadLibrary()]");
+        try
+        {
+            //PathManager.LoadLibrary("ktanemod-remote-math-interface");
+            System.IO.File.Copy(
+                "mods/remotemath/dlls/ktanemod-remote-math-interface.so",
+                UnityEngine.Application.dataPath + "/Mono/x86_64/ktanemod-remote-math-interface.so",
+                true);
+        }
+        catch (NullReferenceException)
+        {
+            Debug.Log("NullReferenceException from KeepCoding");
+        }
+        Debug.Log("[After PathManager.LoadLibrary()]");
+    }
+
     private void Start()
     {
-        PathManager.LoadLibrary("ktanemod-remote-math-interface");
-        RemoteMathLink.RemoteMathInterfaceEntry();
+        RemoteMathLink.Entry();
         _moduleId = _moduleIdCounter++;
 
         var scalar = transform.lossyScale.x;
