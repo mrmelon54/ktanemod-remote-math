@@ -437,6 +437,24 @@ public class AssetBundler
         string srcPath = Path.Combine(TEMP_BUILD_FOLDER, BUNDLE_FILENAME);
         string destPath = Path.Combine(outputFolder, BUNDLE_FILENAME);
         File.Copy(srcPath, destPath, true);
+        
+        IEnumerable<string> assetPaths = AssetDatabase.GetAllAssetPaths().Where(path => (path.EndsWith(".dll") || path.EndsWith(".so")) && path.StartsWith("Assets/Plugins/dlls/"));
+        foreach (string assetPath in assetPaths)
+        {
+            string dirName = Path.GetFileName(Path.GetDirectoryName(assetPath));
+            string outputSubFolder = Path.Combine(outputFolder, "dlls");
+            if (dirName != "dlls")
+            {
+                outputSubFolder = Path.Combine(Path.Combine(outputFolder, "dlls"), dirName);
+                if (!Directory.Exists(outputSubFolder))
+                {
+                    Directory.CreateDirectory(outputSubFolder);
+                }
+            }
+            string filePath = Path.Combine(outputSubFolder, Path.GetFileName(assetPath));
+            Debug.LogFormat("Copying {0} to {1}", assetPath, filePath);
+            File.Copy(assetPath, filePath, true);
+        }
     }
 
     /// <summary>
