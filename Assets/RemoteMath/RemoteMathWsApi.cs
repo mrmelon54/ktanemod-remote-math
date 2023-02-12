@@ -41,8 +41,7 @@ public class RemoteMathWsApi : MonoBehaviour
 
     public sealed class Handler
     {
-        //private const string Address = "ws://remote-math.mrmelon54.xyz:13695";
-        private const string Address = "ws://localhost:8080";
+        private const string Address = "ws://localhost:8164";
         private Thread _t;
         private bool _shouldBeRunning;
         private WebSocket _ws;
@@ -71,7 +70,6 @@ public class RemoteMathWsApi : MonoBehaviour
         public void Start(string token)
         {
             _internalToken = token;
-            ServicePointManager.SecurityProtocol = (SecurityProtocolType) 3072;
 
             if (IsRunning()) return;
             _shouldBeRunning = true;
@@ -93,7 +91,6 @@ public class RemoteMathWsApi : MonoBehaviour
         {
             Debug.Log("[RemoteMathWsApi] Connecting to " + Address);
             _ws = new WebSocket(Address);
-            _ws.SslConfiguration.EnabledSslProtocols = (SslProtocols) 3072;
             using (_ws)
             {
                 _ws.OnError += OnError;
