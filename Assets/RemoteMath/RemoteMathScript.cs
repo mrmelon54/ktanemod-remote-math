@@ -11,6 +11,8 @@ using UnityEngine.Serialization;
 
 public class RemoteMathScript : MonoBehaviour
 {
+    public bool UseProdAddressInDev = false;
+
     [FormerlySerializedAs("BombAudio")] public KMAudio bombAudio;
     [FormerlySerializedAs("BombInfo")] public KMBombInfo bombInfo;
     [FormerlySerializedAs("BombModule")] public KMBombModule bombModule;
@@ -36,7 +38,7 @@ public class RemoteMathScript : MonoBehaviour
     private bool _isConnected;
     private bool _moduleStartup;
     private bool _hasErrored;
-    private string _secretToken;
+    private string _secretToken = "";
 
     private bool _twitchPlaysMode;
 #pragma warning disable CS0649
@@ -80,7 +82,7 @@ public class RemoteMathScript : MonoBehaviour
 
     private void Awake()
     {
-        RemoteMathInterface.Entry();
+        RemoteMathInterface.Entry(UseProdAddressInDev);
     }
 
     private void Start()
