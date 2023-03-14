@@ -41,7 +41,8 @@ public class RemoteMathWsApi : MonoBehaviour
 
     public sealed class Handler
     {
-        private const string Address = "ws://localhost:8164";
+        private const string AddressProd = "ws://localhost:8164";
+		private const string AddressDev = "ws://localhost:8165";
         private Thread _t;
         private bool _shouldBeRunning;
         private WebSocket _ws;
@@ -49,9 +50,10 @@ public class RemoteMathWsApi : MonoBehaviour
         private const string PuzzleCodePrefix = "PuzzleCode::";
         private const string PuzzleLogPrefix = "PuzzleLog::";
         private const string PuzzleTwitchCodePrefix = "PuzzleTwitchCode::";
-        private double _lastPong = (DateTime.Now - DateTime.Now).TotalMilliseconds;
+        private double _lastPong = 0;
         private readonly RemoteMathScript _rMath;
-        private string _internalToken;
+		private bool _isEditor;
+        private string _internalToken = "";
         private int _closeCount;
 
         public event EmptyEventHandler PuzzleError;
@@ -69,6 +71,7 @@ public class RemoteMathWsApi : MonoBehaviour
 
         public void Start(string token)
         {
+			_isEditor = Application.isEditor;
             _internalToken = token;
 
             if (IsRunning()) return;
@@ -89,14 +92,20 @@ public class RemoteMathWsApi : MonoBehaviour
 
         private void RawStart()
         {
-            Debug.Log("[RemoteMathWsApi] Connecting to " + Address);
-            _ws = new WebSocket(Address);
+			if (_isEditor) {
+				Debug.Log("[RemoteMathWsApi] Connecting to development endpoint: " + AddressDev);
+            	_ws = new WebSocket(AddressDev);
+            } else {
+				Debug.Log("[RemoteMathWsApi] Connecting to production endpoint: " + AddressProd);
+            	_ws = new WebSocket(AddressProd);
+			}
             using (_ws)
             {
                 _ws.OnError += OnError;
                 _ws.OnMessage += OnMessage;
                 _ws.OnClose += OnClose;
                 _ws.OnOpen += OnOpen;
+				_lastPong = 0;
                 _ws.Connect();
                 while (_shouldBeRunning)
                 {
@@ -236,7 +245,7 @@ public class RemoteMathWsApi : MonoBehaviour
 
                 if (e.Data.StartsWith(PuzzleCodePrefix))
                 {
-                    if (e.Data.Length == PuzzleCodePrefix.Length + 8)
+                    if (e.Data.Length == PuzzleCodePrefix.Length + 6)
                     {
                         var codeValue = e.Data.Substring(PuzzleCodePrefix.Length);
                         OnPuzzleLog("Received data: " + e.Data);
@@ -245,7 +254,7 @@ public class RemoteMathWsApi : MonoBehaviour
                     }
                     else
                     {
-                        OnPuzzleLog("Invalid packet received");
+                        OnPuzzleLog("Invalid packet received: PuzzleCodePrefix should be 6 chars");
                         OnPuzzleError();
                     }
 
@@ -291,7 +300,7 @@ public class RemoteMathWsApi : MonoBehaviour
             yield return new WaitForSeconds(7);
             var baseDate = new DateTime(1970, 1, 1);
             var latestPong = (DateTime.Now - baseDate).TotalMilliseconds;
-            if (!(latestPong - _lastPong > 6000)) yield break;
+			if (_lastPong == 0 || latestPong - _lastPong < 6000) yield break;
             OnPuzzleLog("Last ping was at " + _lastPong);
             OnPuzzleLog("Ping check failed");
             if (_ws != null) _ws.Close();

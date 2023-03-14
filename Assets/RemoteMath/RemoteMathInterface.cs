@@ -12,12 +12,17 @@ namespace RemoteMath
 
 		[DllImport("ktanemod-remote-math-interface", CallingConvention = CallingConvention.Cdecl)]
 		private static extern void RemoteMathIsEditor();
+		
+        [DllImport("ktanemod-remote-math-interface", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void RemoteMathNotEditor();
 
-        public static void Entry()
+        public static void Entry(bool useProdAddressInDev)
         {
-			if (Application.isEditor) {
-				RemoteMathIsEditor();
-				RemoteMathInterfaceEntry();
+			if (Application.isEditor)
+            {
+                RemoteMathIsEditor();
+                if (useProdAddressInDev) RemoteMathNotEditor();
+                RemoteMathInterfaceEntry();
             } else Experimental.UnmanagedExternalMethod(GetAssemblyPath("ktanemod-remote-math-interface"), "RemoteMathInterfaceEntry").Invoke();
         }
 
