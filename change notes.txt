@@ -28,3 +28,5 @@ Version 2.4
 Version 2.5
   - Some improvements to TP points by VFlyer
 
+Version 2.6
+  - Fixed secure websockets not working
