@@ -30,3 +30,6 @@ Version 2.5
 
 Version 2.6
   - Fixed secure websockets not working
+
+Version 2.7
+  - Fixed !
