@@ -342,7 +342,7 @@ public class RemoteMathScript : MonoBehaviour
             yield return null;
             TwitchPlaysMode = true;
             GetTwitchPlaysId();
-            if (!_hasErrored && _allowedToSolve)
+            if (_hasErrored && _allowedToSolve)
                 // ReSharper disable once StringLiteralTypo
                 yield return "awardpointsonsolve -8";
             mainButton.OnInteract();
