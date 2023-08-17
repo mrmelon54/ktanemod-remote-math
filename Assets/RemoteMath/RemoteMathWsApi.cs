@@ -122,12 +122,7 @@ public class RemoteMathWsApi : MonoBehaviour
             if (!IsRunning()) return;
             if (_internalToken == "")
             {
-                _ws.Send("stephanie");
-            }
-            else
-            {
-                _ws.Send("timothy");
-                _ws.Send("PuzzleReactivate::" + _internalToken);
+                _ws.Send("blåhaj");
             }
 
             UnityMainThreadDispatcher.Instance().Enqueue(StartPingChecker());
