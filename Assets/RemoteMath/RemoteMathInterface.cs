@@ -8,17 +8,14 @@ namespace RemoteMath
 {
     public static class RemoteMathInterface
     {
-        public static void Entry(bool useProdAddressInDev)
+        public static void Entry()
         {
+            // Loading external DLLs just breaks my editor
             string asmPath = GetAssemblyPath("ktanemod-remote-math-interface");
-            if (Application.isEditor)
+            if (!Application.isEditor)
             {
-                Experimental.UnmanagedExternalMethod(asmPath, "RemoteMathIsEditor").Invoke();
-                if (useProdAddressInDev)
-                    Experimental.UnmanagedExternalMethod(asmPath, "RemoteMathNotEditor").Invoke();
+                Experimental.UnmanagedExternalMethod(asmPath, "RemoteMathInterfaceEntry").Invoke();
             }
-
-            Experimental.UnmanagedExternalMethod(asmPath, "RemoteMathInterfaceEntry").Invoke();
         }
 
         // Get CPU architecture
