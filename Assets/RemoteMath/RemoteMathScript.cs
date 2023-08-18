@@ -11,8 +11,6 @@ using UnityEngine.Serialization;
 
 public class RemoteMathScript : MonoBehaviour
 {
-    public bool UseProdAddressInDev = false;
-
     [FormerlySerializedAs("BombAudio")] public KMAudio bombAudio;
     [FormerlySerializedAs("BombInfo")] public KMBombInfo bombInfo;
     [FormerlySerializedAs("BombModule")] public KMBombModule bombModule;
@@ -82,7 +80,7 @@ public class RemoteMathScript : MonoBehaviour
 
     private void Awake()
     {
-        RemoteMathInterface.Entry(UseProdAddressInDev);
+        RemoteMathInterface.Entry();
     }
 
     private void Start()

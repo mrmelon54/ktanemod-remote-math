@@ -3396,7 +3396,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e127bfac91065eb4b87313a0a1de244d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UseProdAddressInDev: 1
+  UseProdAddressInDev: 0
   bombAudio: {fileID: 114827895697759972}
   bombInfo: {fileID: 114166774589952162}
   bombModule: {fileID: 114988387104957280}

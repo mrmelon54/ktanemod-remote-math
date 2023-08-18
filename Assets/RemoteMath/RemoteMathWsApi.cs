@@ -42,7 +42,7 @@ public class RemoteMathWsApi : MonoBehaviour
     public sealed class Handler
     {
         private const string AddressProd = "ws://localhost:8164";
-		private const string AddressDev = "ws://localhost:8165";
+        private const string AddressDev = "ws://localhost:8165";
         private Thread _t;
         private bool _shouldBeRunning;
         private WebSocket _ws;
@@ -52,7 +52,7 @@ public class RemoteMathWsApi : MonoBehaviour
         private const string PuzzleTwitchCodePrefix = "PuzzleTwitchCode::";
         private double _lastPong = 0;
         private readonly RemoteMathScript _rMath;
-		private bool _isEditor;
+        private bool _isEditor;
         private string _internalToken = "";
         private int _closeCount;
 
@@ -71,12 +71,12 @@ public class RemoteMathWsApi : MonoBehaviour
 
         public void Start(string token)
         {
-			_isEditor = Application.isEditor;
+            _isEditor = Application.isEditor;
             _internalToken = token;
 
             if (IsRunning()) return;
             _shouldBeRunning = true;
-            _t = new Thread(RawStart) {IsBackground = true};
+            _t = new Thread(RawStart) { IsBackground = true };
             _t.Start();
         }
 
@@ -92,20 +92,24 @@ public class RemoteMathWsApi : MonoBehaviour
 
         private void RawStart()
         {
-			if (_isEditor) {
-				Debug.Log("[RemoteMathWsApi] Connecting to development endpoint: " + AddressDev);
-            	_ws = new WebSocket(AddressDev);
-            } else {
-				Debug.Log("[RemoteMathWsApi] Connecting to production endpoint: " + AddressProd);
-            	_ws = new WebSocket(AddressProd);
-			}
+            if (_isEditor)
+            {
+                Debug.Log("[RemoteMathWsApi] Connecting to development endpoint: " + AddressDev);
+                _ws = new WebSocket(AddressDev);
+            }
+            else
+            {
+                Debug.Log("[RemoteMathWsApi] Connecting to production endpoint: " + AddressProd);
+                _ws = new WebSocket(AddressProd);
+            }
+
             using (_ws)
             {
                 _ws.OnError += OnError;
                 _ws.OnMessage += OnMessage;
                 _ws.OnClose += OnClose;
                 _ws.OnOpen += OnOpen;
-				_lastPong = 0;
+                _lastPong = 0;
                 _ws.Connect();
                 while (_shouldBeRunning)
                 {
@@ -145,25 +149,25 @@ public class RemoteMathWsApi : MonoBehaviour
 
         private void OnPuzzleLog(string a, bool fromServer = false)
         {
-            var e = new PuzzleLogEventArgs {FromServer = fromServer, Message = a};
+            var e = new PuzzleLogEventArgs { FromServer = fromServer, Message = a };
             if (PuzzleLog != null) PuzzleLog.Invoke(e);
         }
 
         private void OnPuzzleCode(string incomingCode)
         {
-            var e = new PuzzleCodeEventArgs {Code = incomingCode};
+            var e = new PuzzleCodeEventArgs { Code = incomingCode };
             if (PuzzleCode != null) PuzzleCode.Invoke(e);
         }
 
         private void OnPuzzleToken(string incomingToken)
         {
-            var e = new PuzzleTokenEventArgs {Token = incomingToken};
+            var e = new PuzzleTokenEventArgs { Token = incomingToken };
             if (PuzzleToken != null) PuzzleToken.Invoke(e);
         }
 
         private void OnPuzzleTwitchCode(string incomingCode)
         {
-            var e = new PuzzleTwitchCodeEventArgs {Code = incomingCode};
+            var e = new PuzzleTwitchCodeEventArgs { Code = incomingCode };
             if (PuzzleTwitchCode != null) PuzzleTwitchCode.Invoke(e);
         }
 
@@ -295,7 +299,7 @@ public class RemoteMathWsApi : MonoBehaviour
             yield return new WaitForSeconds(7);
             var baseDate = new DateTime(1970, 1, 1);
             var latestPong = (DateTime.Now - baseDate).TotalMilliseconds;
-			if (_lastPong == 0 || latestPong - _lastPong < 6000) yield break;
+            if (_lastPong == 0 || latestPong - _lastPong < 6000) yield break;
             OnPuzzleLog("Last ping was at " + _lastPong);
             OnPuzzleLog("Ping check failed");
             if (_ws != null) _ws.Close();
