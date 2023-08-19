@@ -443,13 +443,9 @@ public class AssetBundler
         {
             string dirName = Path.GetFileName(Path.GetDirectoryName(assetPath));
             string outputSubFolder = Path.Combine(outputFolder, "dlls");
-            if (dirName != "dlls")
+            if (!Directory.Exists(outputSubFolder))
             {
-                outputSubFolder = Path.Combine(Path.Combine(outputFolder, "dlls"), dirName);
-                if (!Directory.Exists(outputSubFolder))
-                {
-                    Directory.CreateDirectory(outputSubFolder);
-                }
+                Directory.CreateDirectory(outputSubFolder);
             }
             string filePath = Path.Combine(outputSubFolder, Path.GetFileName(assetPath));
             Debug.LogFormat("Copying {0} to {1}", assetPath, filePath);
