@@ -438,7 +438,7 @@ public class AssetBundler
         string destPath = Path.Combine(outputFolder, BUNDLE_FILENAME);
         File.Copy(srcPath, destPath, true);
         
-        IEnumerable<string> assetPaths = AssetDatabase.GetAllAssetPaths().Where(path => (path.EndsWith(".dll") || path.EndsWith(".so")) && path.StartsWith("Assets/Plugins/dlls/"));
+        IEnumerable<string> assetPaths = AssetDatabase.GetAllAssetPaths().Where(path => (path.EndsWith(".dll") || path.EndsWith(".so") || path.EndsWith(".dylib")) && path.StartsWith("Assets/Plugins/dlls/"));
         foreach (string assetPath in assetPaths)
         {
             string dirName = Path.GetFileName(Path.GetDirectoryName(assetPath));
