@@ -41,3 +41,6 @@ Version 2.8
 
 Version 2.9
   - Asset bundler go brrr
+
+Version 2.10
+  - Asset bundler forgot dylib files
