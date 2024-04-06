@@ -1,8 +1,11 @@
-﻿using UnityEditor;
+﻿#pragma warning disable 436
+
+using UnityEditor;
 using Steamworks;
 using UnityEngine;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Collections.Generic;
 
 public class WorkshopEditorWindow : EditorWindow
@@ -18,6 +21,7 @@ public class WorkshopEditorWindow : EditorWindow
     protected WorkshopItem currentWorkshopItem;
     protected WorkshopItemEditor workshopItemEditor;
     protected string changeNotes;
+    protected bool updatePreview = true;
 
     protected CallResult<CreateItemResult_t> onCreateItemCallResultHandler;
     protected CallResult<SubmitItemUpdateResult_t> onItemUpdateCallResultHandler;
@@ -34,7 +38,7 @@ public class WorkshopEditorWindow : EditorWindow
         Debug.LogWarning(pchDebugText);
     }
 
-    [MenuItem("Keep Talking ModKit/Steam Workshop Tool _#F6", priority = 20)]
+    [MenuItem("Keep Talking ModKit/Steam Workshop Tool _#F5", priority = 20)]
     protected static void ShowWindow()
     {
         WorkshopEditorWindow window = EditorWindow.GetWindow<WorkshopEditorWindow>("Workshop");
@@ -96,13 +100,15 @@ public class WorkshopEditorWindow : EditorWindow
             GUI.backgroundColor = new Color(0.1f, 0.1f, 0.5f, 0.7f);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             GUI.backgroundColor = oldBGColor;
+            
+            string folder = GetContentPath();
 
             EditorGUILayout.LabelField("Publishing Tools", EditorStyles.largeLabel);
             EditorGUILayout.Separator();
             EditorGUILayout.LabelField("User:", userName);
-            EditorGUILayout.LabelField("Content Folder:", GetContentPath());
+            EditorGUILayout.LabelField("Content Folder:", folder);
 
-            DirectoryInfo dir = new DirectoryInfo(GetContentPath());
+            DirectoryInfo dir = new DirectoryInfo(folder);
 
             if (dir.Exists)
             {
@@ -134,11 +140,18 @@ public class WorkshopEditorWindow : EditorWindow
             //Change Notes
             EditorGUILayout.PrefixLabel("Change Notes:");
             changeNotes = EditorGUILayout.TextArea(changeNotes, GUILayout.MinHeight(64));
+            
+            updatePreview = EditorGUILayout.ToggleLeft("Update Workshop preview image (only as the owner of the item!)", updatePreview);
 
             if (string.IsNullOrEmpty(changeNotes))
             {
                 EditorGUILayout.HelpBox("Change notes must be entered before publishing to Workshop", MessageType.Warning);
             }
+            
+            if(dir.Exists && dir.GetFiles("modInfo_Harmony.json").Length > 0)
+			{
+				EditorGUILayout.HelpBox("Your mod uses the Harmony library. This means it won't work without the Tweaks mod, so on the Workshop, please either add Tweaks as a dependency or mention it in the description!", MessageType.Warning);
+			}
 
 
             //Publishing changes
@@ -162,7 +175,7 @@ public class WorkshopEditorWindow : EditorWindow
                 {
                     PublishWorkshopChanges();
                 }
-
+				
                 if (!string.IsNullOrEmpty(ugcUpdateStatus))
                 {
                     EditorGUILayout.LabelField(ugcUpdateStatus);
@@ -170,6 +183,7 @@ public class WorkshopEditorWindow : EditorWindow
 
                 GUI.enabled = true;
             }
+            
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
@@ -208,7 +222,7 @@ public class WorkshopEditorWindow : EditorWindow
             SteamUGC.SetItemTags(ugcUpdateHandle, GetTags());
         }
 
-        if (ModConfig.PreviewImage != null)
+        if (updatePreview && ModConfig.PreviewImage != null)
         {
             string previewImagePath = AssetDatabase.GetAssetPath(ModConfig.PreviewImage);
             previewImagePath = Path.GetFullPath(previewImagePath);
@@ -326,6 +340,8 @@ public class WorkshopEditorWindow : EditorWindow
         if (result.m_eResult == EResult.k_EResultOK)
         {
             currentWorkshopItem.WorkshopPublishedFileID = result.m_nPublishedFileId.m_PublishedFileId;
+            AssetDatabase.SaveAssets();
+
             PublishWorkshopChanges();
         }
     }
