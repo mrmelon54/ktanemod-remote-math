@@ -59,22 +59,36 @@ public class RemoteMathScript : MonoBehaviour
 
     private void GetTwitchPlaysId()
     {
+        if (Application.isEditor)
+        {
+            Debug.Log("Using editor TwitchPlays ID finder");
+            foreach (var child in realStatusLitBoi.GetComponentsInChildren<TwitchPlaysID>())
+            {
+                int modId = child.GetValue<int>("ModuleID");
+                TwitchId = string.Format("{0}", modId);
+                break;
+            }
+
+            Debug.Log("Current module is ID: " + TwitchId);
+            return;
+        }
+
         var gType = ReflectionHelper.FindType("TwitchGame", "TwitchPlaysAssembly");
         object comp = FindObjectOfType(gType);
         if (comp == null) return;
         var twitchModules = comp.GetType().GetField("Modules", BindingFlags.Public | BindingFlags.Instance);
         if (twitchModules == null) return;
         var twitchPlaysObj = twitchModules.GetValue(comp);
-        var twitchPlaysModules = (IEnumerable) twitchPlaysObj;
+        var twitchPlaysModules = (IEnumerable)twitchPlaysObj;
         foreach (var module in twitchPlaysModules)
         {
             var bombComponent = module.GetType().GetField("BombComponent", BindingFlags.Public | BindingFlags.Instance);
             if (bombComponent == null) continue;
-            var behaviour = (MonoBehaviour) bombComponent.GetValue(module);
+            var behaviour = (MonoBehaviour)bombComponent.GetValue(module);
             var rMath = behaviour.GetComponent<RemoteMathScript>();
             if (rMath != this) continue;
             var moduleCode = module.GetType().GetProperty("Code", BindingFlags.Public | BindingFlags.Instance);
-            if (moduleCode != null) TwitchId = (string) moduleCode.GetValue(module, null);
+            if (moduleCode != null) TwitchId = (string)moduleCode.GetValue(module, null);
         }
     }
 
@@ -155,16 +169,20 @@ public class RemoteMathScript : MonoBehaviour
     // ReSharper disable Unity.PerformanceAnalysis
     private void ReceivedPuzzleLog(RemoteMathWsApi.PuzzleLogEventArgs e)
     {
-        Debug.LogFormat("[Remote Math #{0}] {2}: {1}", _moduleId, e.Message, e.FromServer ? "Server message" : "Websocket API");
+        Debug.LogFormat("[Remote Math #{0}] {2}: {1}", _moduleId, e.Message,
+            e.FromServer ? "Server message" : "Websocket API");
     }
 
     private IEnumerator SendPuzzleFruit()
     {
         var fruitNumbers = new List<int>();
-        for (var i = 0; i < 8; i++) fruitNumbers.Add(Convert.ToInt32(Math.Floor(UnityEngine.Random.Range(0f, fruitMats.Length))));
+        for (var i = 0; i < 8; i++)
+            fruitNumbers.Add(Convert.ToInt32(Math.Floor(UnityEngine.Random.Range(0f, fruitMats.Length))));
 
-        fruit1.transform.Find("FruitImage").gameObject.GetComponent<MeshRenderer>().material = fruitMats[fruitNumbers[0]];
-        fruit2.transform.Find("FruitImage").gameObject.GetComponent<MeshRenderer>().material = fruitMats[fruitNumbers[1]];
+        fruit1.transform.Find("FruitImage").gameObject.GetComponent<MeshRenderer>().material =
+            fruitMats[fruitNumbers[0]];
+        fruit2.transform.Find("FruitImage").gameObject.GetComponent<MeshRenderer>().material =
+            fruitMats[fruitNumbers[1]];
         fruit1.transform.Find("FruitText").gameObject.GetComponent<TextMesh>().text = fruitNames[fruitNumbers[2]];
         fruit2.transform.Find("FruitText").gameObject.GetComponent<TextMesh>().text = fruitNames[fruitNumbers[3]];
         fruit1.SetActive(true);
@@ -271,7 +289,9 @@ public class RemoteMathScript : MonoBehaviour
 
     private IEnumerator ShowSecretCode(string code, bool ignoreLineBreak)
     {
-        secretCodeText.GetComponent<TextMesh>().text = ignoreLineBreak || code.Length < 4 ? code : code.Substring(0, 4) + "\n" + code.Substring(4);
+        secretCodeText.GetComponent<TextMesh>().text = ignoreLineBreak || code.Length < 4
+            ? code
+            : code.Substring(0, 4) + "\n" + code.Substring(4);
         yield return null;
     }
 
@@ -291,7 +311,8 @@ public class RemoteMathScript : MonoBehaviour
         _currentLed = led;
         realStatusLitBoi.SetActive(false);
         var transformForFakeStatusLitBoi = fakeStatusLitBoi.transform;
-        for (var i = 0; i < transformForFakeStatusLitBoi.childCount; i++) transformForFakeStatusLitBoi.GetChild(i).gameObject.SetActive(false);
+        for (var i = 0; i < transformForFakeStatusLitBoi.childCount; i++)
+            transformForFakeStatusLitBoi.GetChild(i).gameObject.SetActive(false);
 
         if (led != "Off") transformForFakeStatusLitBoi.Find(led).gameObject.SetActive(true);
         else realStatusLitBoi.SetActive(true);
@@ -327,7 +348,8 @@ public class RemoteMathScript : MonoBehaviour
 
 #pragma warning disable 414
     // ReSharper disable once InconsistentNaming
-    private readonly string TwitchHelpMessage = @"Use `!{0} go` to start the module and then use it again once you have solved it.";
+    private readonly string TwitchHelpMessage =
+        @"Use `!{0} go` to start the module and then use it again once you have solved it.";
 #pragma warning restore 414
 
     // ReSharper disable once UnusedMember.Local
