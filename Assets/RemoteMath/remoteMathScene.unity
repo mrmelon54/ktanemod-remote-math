@@ -524,6 +524,10 @@ Prefab:
       propertyPath: m_Name
       value: RemoteMathModule (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 1156178883234604, guid: 81c73dbb7494ade4bacdee94c3b4639e, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 81c73dbb7494ade4bacdee94c3b4639e, type: 2}
   m_IsPrefabParent: 0

@@ -44,3 +44,6 @@ Version 2.9
 
 Version 2.10
   - Asset bundler forgot dylib files
+
+Version 2.11
+  - Update modkit

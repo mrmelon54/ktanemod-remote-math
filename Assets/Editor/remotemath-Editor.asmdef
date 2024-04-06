@@ -1,0 +1,10 @@
+{
+  "name": "remotemath-Editor",
+  "references": [
+    "remotemath"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": []
+}
