@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Net;
-using System.Security.Authentication;
 using System.Threading;
 using UnityEngine;
 using WebSocketSharp;

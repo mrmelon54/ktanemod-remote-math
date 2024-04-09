@@ -113,7 +113,9 @@ public class AssetBundler
         }
         else if (mode != AssemblyMode.None && !AssemblyDefinitions.RunChecks(false))
         {
-            Debug.LogErrorFormat("The selected mod id ({0}) cannot be used to build this project. Please choose a different id in the \"Keep Talking Modkit / Configure Mod\" menu.", ModConfig.ID);
+            Debug.LogErrorFormat(
+                "The selected mod id ({0}) cannot be used to build this project. Please choose a different id in the \"Keep Talking Modkit / Configure Mod\" menu.",
+                ModConfig.ID);
             return;
         }
 
@@ -274,7 +276,7 @@ public class AssetBundler
         //Next we need to grab some type references and use reflection to build things the way Unity does.
         //Note that EditorUtility.CompileCSharp will do *almost* exactly the same thing, but it unfortunately
         //defaults to "unity" rather than "2.0" when selecting the .NET support for the classlib_profile.
-        
+
         string[] defineArray = allDefines.Split(';');
 
         var proxyScripts = scriptAssetPaths.Where(path => path.StartsWith("Assets/Scripts/GameProxies")).ToArray();
@@ -285,7 +287,7 @@ public class AssetBundler
 
         if (success)
         {
-            if(proxyScripts.Length > 0)
+            if (proxyScripts.Length > 0)
                 managedReferences.Add(outputFolder + "/GameProxies.dll");
             ModkitCompiler.CompileAssembly(
                 scriptAssetPaths.Where(path => !path.StartsWith("Assets/Scripts/GameProxies")).ToArray(),
@@ -353,6 +355,20 @@ public class AssetBundler
         string srcPath = Path.Combine(TEMP_BUILD_FOLDER, BUNDLE_FILENAME);
         string destPath = Path.Combine(outputFolder, BUNDLE_FILENAME);
         File.Copy(srcPath, destPath, true);
+
+        // Copy custom assemblies to build output folder
+        IEnumerable<string> assetPaths = AssetDatabase.GetAllAssetPaths().Where(path =>
+            (path.EndsWith(".dll") || path.EndsWith(".so") || path.EndsWith(".dylib")) &&
+            path.StartsWith("Assets/Plugins/dlls/"));
+        foreach (string assetPath in assetPaths)
+        {
+            string outputSubFolder = Path.Combine(outputFolder, "dlls");
+            if (!Directory.Exists(outputSubFolder)) Directory.CreateDirectory(outputSubFolder);
+
+            string filePath = Path.Combine(outputSubFolder, Path.GetFileName(assetPath));
+            Debug.LogFormat("Copying {0} to {1}", assetPath, filePath);
+            File.Copy(assetPath, filePath, true);
+        }
     }
 
     /// <summary>
