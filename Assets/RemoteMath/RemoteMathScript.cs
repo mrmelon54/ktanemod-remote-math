@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using KeepCoding;
 using KModkit;
 using RemoteMath;
 using UnityEngine;
@@ -59,19 +58,18 @@ public class RemoteMathScript : MonoBehaviour
 
     private void GetTwitchPlaysId()
     {
-        if (Application.isEditor)
+#if UNITY_EDITOR
+        Debug.Log("Using editor TwitchPlays ID finder");
+        foreach (var child in realStatusLitBoi.GetComponentsInChildren<TwitchPlaysID>())
         {
-            Debug.Log("Using editor TwitchPlays ID finder");
-            foreach (var child in realStatusLitBoi.GetComponentsInChildren<TwitchPlaysID>())
-            {
-                int modId = child.GetValue<int>("ModuleID");
-                TwitchId = string.Format("{0}", modId);
-                break;
-            }
-
-            Debug.Log("Current module is ID: " + TwitchId);
-            return;
+            int modId = child.GetValue<int>("ModuleID");
+            TwitchId = string.Format("{0}", modId);
+            break;
         }
+
+        Debug.Log("Current module is ID: " + TwitchId);
+        return;
+#endif
 
         var gType = ReflectionHelper.FindType("TwitchGame", "TwitchPlaysAssembly");
         object comp = FindObjectOfType(gType);

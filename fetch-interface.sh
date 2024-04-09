@@ -7,6 +7,8 @@ echo "fetch-interface.sh"
 echo "=================="
 echo
 
+mkdir -p "$dlls"
+
 if [ -d "$dlls" ]; then
   echo "Removing old build dlls"
   cd "$dlls"
